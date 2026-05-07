@@ -1,0 +1,1443 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz - Estrutura de Dados e Algoritmos em C</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            padding: 15px;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            width: 120px;
+            height: auto;
+            margin-bottom: 15px;
+            border-radius: 10px;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            color: #00d4ff;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+            margin-bottom: 8px;
+        }
+
+        header p {
+            color: #a0a0a0;
+            font-size: 1rem;
+        }
+
+        .progress-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            height: 15px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #00d4ff, #0099ff);
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .progress-text {
+            text-align: center;
+            margin-top: 10px;
+            color: #00d4ff;
+            font-weight: bold;
+            font-size: 0.95rem;
+        }
+
+        .score-display {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 12px;
+        }
+
+        .score-item {
+            text-align: center;
+        }
+
+        .score-item span {
+            display: block;
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        .score-item .correct { color: #00ff88; }
+        .score-item .wrong { color: #ff4757; }
+
+        .question-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            display: none;
+        }
+
+        .question-card.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .question-number {
+            background: linear-gradient(135deg, #00d4ff, #0099ff);
+            padding: 6px 15px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .question-topic {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+        }
+
+        .question-text {
+            font-size: 1.05rem;
+            line-height: 1.7;
+            margin-bottom: 20px;
+            color: #e0e0e0;
+        }
+
+        .code-block {
+            background: #0d1117;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            overflow-x: auto;
+            border-left: 4px solid #00d4ff;
+        }
+
+        .code-block pre {
+            color: #c9d1d9;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .option:hover:not(.disabled):not(.selected) {
+            background: rgba(0, 212, 255, 0.1);
+            border-color: rgba(0, 212, 255, 0.5);
+        }
+
+        .option.selected {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: #00d4ff;
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+        }
+
+        .option.correct {
+            background: rgba(0, 255, 136, 0.2);
+            border-color: #00ff88;
+        }
+
+        .option.wrong {
+            background: rgba(255, 71, 87, 0.2);
+            border-color: #ff4757;
+        }
+
+        .option.disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        .option-letter {
+            background: rgba(255, 255, 255, 0.1);
+            min-width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        .option.selected .option-letter {
+            background: #00d4ff;
+            color: #1a1a2e;
+        }
+
+        .option.correct .option-letter {
+            background: #00ff88;
+            color: #1a1a2e;
+        }
+
+        .option.wrong .option-letter {
+            background: #ff4757;
+            color: #fff;
+        }
+
+        .option-text {
+            flex: 1;
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+
+        .explanation {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(0, 153, 255, 0.1));
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            border-left: 4px solid #00d4ff;
+            display: none;
+        }
+
+        .explanation.show {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .explanation h4 {
+            color: #00d4ff;
+            margin-bottom: 12px;
+            font-size: 1rem;
+        }
+
+        .explanation p {
+            color: #c0c0c0;
+            line-height: 1.7;
+            margin-bottom: 12px;
+            font-size: 0.95rem;
+        }
+
+        .explanation .wrong-options {
+            margin-top: 18px;
+            padding-top: 18px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .explanation .wrong-options h5 {
+            color: #ff4757;
+            margin-bottom: 12px;
+            font-size: 0.95rem;
+        }
+
+        .explanation .wrong-option-item {
+            background: rgba(255, 71, 87, 0.1);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 3px solid #ff4757;
+        }
+
+        .explanation .wrong-option-item strong {
+            color: #ff6b7a;
+            font-size: 0.9rem;
+        }
+
+        .explanation .wrong-option-item p {
+            margin: 5px 0 0 0;
+            font-size: 0.9rem;
+        }
+
+        .buttons-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 14px 20px;
+            font-size: 1rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            border: none;
+            text-align: center;
+        }
+
+        .btn-back {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-back:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .btn-back:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .btn-confirm {
+            background: linear-gradient(135deg, #00ff88, #00cc6a);
+            color: #1a1a2e;
+            display: none;
+        }
+
+        .btn-confirm.show {
+            display: block;
+        }
+
+        .btn-confirm:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 25px rgba(0, 255, 136, 0.4);
+        }
+
+        .btn-confirm:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-next {
+            background: linear-gradient(135deg, #00d4ff, #0099ff);
+            color: #fff;
+            display: none;
+        }
+
+        .btn-next.show {
+            display: block;
+        }
+
+        .btn-next:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.4);
+        }
+
+        .results {
+            text-align: center;
+            padding: 40px 20px;
+            display: none;
+        }
+
+        .results.active {
+            display: block;
+        }
+
+        .results h2 {
+            font-size: 2rem;
+            color: #00d4ff;
+            margin-bottom: 25px;
+        }
+
+        .final-score {
+            font-size: 4rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #00d4ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .final-message {
+            font-size: 1.2rem;
+            color: #a0a0a0;
+            margin: 20px 0;
+        }
+
+        .btn-restart {
+            background: linear-gradient(135deg, #00ff88, #00d4ff);
+            color: #1a1a2e;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-restart:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
+        }
+
+        .start-screen {
+            text-align: center;
+            padding: 40px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .start-screen h2 {
+            font-size: 1.6rem;
+            color: #00d4ff;
+            margin-bottom: 20px;
+        }
+
+        .topics {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin: 25px 0;
+        }
+
+        .topic-tag {
+            background: rgba(0, 212, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 15px;
+            border: 1px solid #00d4ff;
+            font-size: 0.9rem;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #00d4ff, #0099ff);
+            color: #fff;
+            border: none;
+            padding: 18px 50px;
+            font-size: 1.2rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-start:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 35px rgba(0, 212, 255, 0.4);
+        }
+
+        .selected-indicator {
+            text-align: center;
+            padding: 10px;
+            margin-top: 15px;
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: 10px;
+            color: #00d4ff;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .selected-indicator.show {
+            display: block;
+        }
+
+        .credits {
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .credits h4 {
+            color: #00d4ff;
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+        }
+
+        .creators-photo {
+            width: 200px;
+            height: auto;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            border: 3px solid rgba(0, 212, 255, 0.3);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .question-photo {
+            width: 100%;
+            max-width: 300px;
+            height: auto;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .credits p {
+            color: #a0a0a0;
+            font-size: 0.85rem;
+            margin: 5px 0;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            header h1 { font-size: 1.6rem; }
+            .logo { width: 100px; }
+            .question-text { font-size: 1rem; }
+            .code-block pre { font-size: 0.8rem; }
+            .option { padding: 12px; }
+            .option-text { font-size: 0.9rem; }
+            .btn { padding: 12px 15px; font-size: 0.95rem; }
+            .final-score { font-size: 3rem; }
+            .credits p { font-size: 0.8rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <img src="logo.jpeg" alt="Logo FEF" class="logo">
+            <h1>Quiz ENADE</h1>
+            <p>Estrutura de Dados e Algoritmos em C</p>
+        </header>
+
+        <div id="startScreen" class="start-screen">
+            <h2>Bem-vindo ao Quiz!</h2>
+            <p style="color: #a0a0a0; margin-bottom: 15px;">Teste seus conhecimentos com 20 questoes no estilo ENADE</p>
+            <div class="topics">
+                <span class="topic-tag">Pilha</span>
+                <span class="topic-tag">Fila</span>
+                <span class="topic-tag">Arvore</span>
+                <span class="topic-tag">Ordenacao</span>
+                <span class="topic-tag">Vetores</span>
+                <span class="topic-tag">Matrizes</span>
+                <span class="topic-tag">Lacos</span>
+            </div>
+            <button class="btn-start" onclick="startQuiz()">Iniciar Quiz</button>
+        </div>
+
+        <div id="quizContainer" style="display: none;">
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText">Questao 1 de 20</div>
+                <div class="score-display">
+                    <div class="score-item">
+                        <span class="correct" id="correctCount">0</span>
+                        <small>Acertos</small>
+                    </div>
+                    <div class="score-item">
+                        <span class="wrong" id="wrongCount">0</span>
+                        <small>Erros</small>
+                    </div>
+                </div>
+            </div>
+
+            <div id="questionsContainer"></div>
+        </div>
+
+        <div id="results" class="results">
+            <img src="logo.jpeg" alt="Logo FEF" class="logo">
+            <h2>Quiz Finalizado!</h2>
+            <div class="final-score" id="finalScore">0%</div>
+            <p class="final-message" id="finalMessage"></p>
+            <p style="color: #a0a0a0;">Voce acertou <span id="finalCorrect">0</span> de 20 questoes</p>
+            <button class="btn-restart" onclick="restartQuiz()">Refazer Quiz</button>
+
+            <div class="credits">
+                <h4>Desenvolvido por:</h4>
+                <img src="Criadores.jpeg" alt="Foto dos Criadores" class="creators-photo">
+                <p>Victor Junio Grigoleto Chicas</p>
+                <p>Mateus Tomaz Siqueira</p>
+                <p>Igor Gabriel de Oliveira Reis</p>
+                <p>Pedro Emmanuel Amaral Martins</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            // PILHA - Questao 1
+            {
+                topic: "Pilha",
+                question: "Considere uma pilha implementada em C utilizando um vetor de inteiros. Qual e a caracteristica fundamental que define o comportamento de uma pilha?",
+                code: `typedef struct {
+    int dados[100];
+    int topo;
+} Pilha;`,
+                options: [
+                    "O primeiro elemento inserido e o primeiro a ser removido (FIFO)",
+                    "O ultimo elemento inserido e o primeiro a ser removido (LIFO)",
+                    "Os elementos sao acessados de forma aleatoria",
+                    "Os elementos sao ordenados automaticamente"
+                ],
+                correct: 1,
+                explanation: "A pilha segue o principio LIFO (Last In, First Out), ou seja, o ultimo elemento a entrar e o primeiro a sair. Isso ocorre porque as operacoes de insercao (push) e remocao (pop) acontecem sempre no topo da pilha. E similar a uma pilha de pratos: voce coloca e retira sempre pelo topo.",
+                wrongExplanations: [
+                    "ERRADA: Esta descricao corresponde a uma FILA (First In, First Out), nao a uma pilha. Na fila, o primeiro a entrar e o primeiro a sair, como em uma fila de banco.",
+                    null,
+                    "ERRADA: Acesso aleatorio e caracteristica de VETORES e ARRAYS, onde podemos acessar qualquer posicao diretamente pelo indice. Na pilha, so temos acesso ao elemento do topo.",
+                    "ERRADA: Pilhas NAO ordenam elementos. Elas apenas mantem a ordem de insercao. Se voce precisa de ordenacao automatica, deve usar uma estrutura como Heap ou Arvore Binaria de Busca."
+                ]
+            },
+            // PILHA - Questao 2
+            {
+                topic: "Pilha",
+                question: "Analise o codigo abaixo que implementa a funcao push em uma pilha. Qual e a saida do programa?",
+                code: `#include <stdio.h>
+#define MAX 5
+
+int pilha[MAX];
+int topo = -1;
+
+void push(int valor) {
+    if (topo < MAX - 1) {
+        pilha[++topo] = valor;
+    }
+}
+
+int pop() {
+    if (topo >= 0) {
+        return pilha[topo--];
+    }
+    return -1;
+}
+
+int main() {
+    push(10);
+    push(20);
+    push(30);
+    printf("%d ", pop());
+    push(40);
+    printf("%d ", pop());
+    printf("%d", pop());
+    return 0;
+}`,
+                options: [
+                    "10 20 30",
+                    "30 20 10",
+                    "30 40 20",
+                    "40 30 20"
+                ],
+                correct: 2,
+                explanation: "Apos push(10), push(20), push(30), a pilha contem [10, 20, 30] com topo em 30. O primeiro pop() retorna 30. Apos push(40), a pilha fica [10, 20, 40]. O segundo pop() retorna 40. O terceiro pop() retorna 20. Portanto, a saida e '30 40 20'.",
+                wrongExplanations: [
+                    "ERRADA: Esta seria a saida se fosse uma FILA (FIFO), onde o primeiro a entrar e o primeiro a sair. Mas estamos trabalhando com pilha (LIFO).",
+                    "ERRADA: Esta seria a saida se fizessemos tres pops seguidos sem o push(40) no meio. A sequencia ignora que inserimos 40 apos o primeiro pop.",
+                    null,
+                    "ERRADA: O 40 nao pode ser o primeiro a sair porque ele foi inserido DEPOIS do primeiro pop(). Quando fizemos o primeiro pop(), o 40 ainda nao estava na pilha."
+                ]
+            },
+            // PILHA - Questao 3
+            {
+                topic: "Pilha",
+                question: "Em uma aplicacao que verifica se expressoes matematicas possuem parenteses balanceados, qual estrutura de dados e mais adequada e por que?",
+                code: `Expressao: ((a + b) * (c - d))
+Verificacao: Cada '(' deve ter um ')' correspondente`,
+                options: [
+                    "Fila, pois processa os caracteres na ordem de chegada",
+                    "Pilha, pois o ultimo parentese aberto deve ser o primeiro a ser fechado",
+                    "Arvore binaria, pois representa a hierarquia das operacoes",
+                    "Lista encadeada, pois permite insercao em qualquer posicao"
+                ],
+                correct: 1,
+                explanation: "A pilha e ideal para verificar parenteses balanceados porque segue a logica LIFO: o ultimo parentese aberto deve ser o primeiro a ser fechado. Quando encontramos '(', empilhamos. Quando encontramos ')', desempilhamos e verificamos se corresponde. Se a pilha estiver vazia no final e todas as correspondencias forem corretas, a expressao esta balanceada.",
+                wrongExplanations: [
+                    "ERRADA: A fila processaria os parenteses na ordem errada. O primeiro '(' encontrado nao corresponde ao primeiro ')' encontrado, mas sim ao ultimo '(' antes desse ')'. A ordem FIFO da fila nao resolve este problema.",
+                    null,
+                    "ERRADA: Arvore binaria e usada para representar a ESTRUTURA da expressao (precedencia de operadores), nao para verificar balanceamento de parenteses. Seria uma estrutura muito mais complexa do que o necessario.",
+                    "ERRADA: Lista encadeada permite insercao em qualquer posicao, mas nao oferece a logica LIFO necessaria. Alem disso, a flexibilidade de insercao em qualquer posicao nao e util para este problema."
+                ]
+            },
+            // FILA - Questao 4
+            {
+                topic: "Fila",
+                question: "Considere uma fila circular implementada em C. Qual e a principal vantagem de usar uma implementacao circular em relacao a uma implementacao linear?",
+                code: `typedef struct {
+    int dados[MAX];
+    int inicio;
+    int fim;
+    int tamanho;
+} FilaCircular;`,
+                options: [
+                    "Permite armazenar mais elementos que a fila linear",
+                    "Evita o desperdicio de espaco quando elementos sao removidos do inicio",
+                    "Permite acesso aleatorio aos elementos",
+                    "Ordena os elementos automaticamente"
+                ],
+                correct: 1,
+                explanation: "Na fila linear, quando removemos elementos do inicio, as posicoes ficam inutilizadas, causando desperdicio de memoria. Na fila circular, quando o fim atinge o limite do vetor, ele 'volta' para o inicio (usando modulo), reaproveitando os espacos liberados. Isso torna o uso da memoria muito mais eficiente.",
+                wrongExplanations: [
+                    "ERRADA: Ambas as filas (circular e linear) com o mesmo tamanho de vetor armazenam a MESMA quantidade maxima de elementos. A diferenca e na EFICIENCIA do uso do espaco, nao na capacidade total.",
+                    null,
+                    "ERRADA: Filas (circulares ou lineares) NAO permitem acesso aleatorio. Em uma fila, voce so pode remover do inicio e inserir no fim. Acesso aleatorio e caracteristica de vetores/arrays.",
+                    "ERRADA: Filas NAO ordenam elementos. Elas mantem a ordem de chegada (FIFO). Se precisar de ordenacao, use uma fila de prioridade ou outra estrutura apropriada."
+                ]
+            },
+            // FILA - Questao 5
+            {
+                topic: "Fila",
+                question: "Analise o codigo de uma fila e determine qual sera a saida apos as operacoes:",
+                code: `#include <stdio.h>
+#define MAX 5
+
+int fila[MAX];
+int inicio = 0, fim = 0;
+
+void enqueue(int valor) {
+    if ((fim + 1) % MAX != inicio) {
+        fila[fim] = valor;
+        fim = (fim + 1) % MAX;
+    }
+}
+
+int dequeue() {
+    if (inicio != fim) {
+        int valor = fila[inicio];
+        inicio = (inicio + 1) % MAX;
+        return valor;
+    }
+    return -1;
+}
+
+int main() {
+    enqueue(5);
+    enqueue(10);
+    enqueue(15);
+    printf("%d ", dequeue());
+    enqueue(20);
+    printf("%d ", dequeue());
+    printf("%d", dequeue());
+    return 0;
+}`,
+                options: [
+                    "15 10 5",
+                    "5 10 15",
+                    "20 15 10",
+                    "5 20 10"
+                ],
+                correct: 1,
+                explanation: "A fila segue FIFO (First In, First Out). Apos enqueue(5), enqueue(10), enqueue(15), a fila contem [5, 10, 15]. O primeiro dequeue() retorna 5 (primeiro a entrar). Apos enqueue(20), a fila fica [10, 15, 20]. O segundo dequeue() retorna 10. O terceiro dequeue() retorna 15. Saida: '5 10 15'.",
+                wrongExplanations: [
+                    "ERRADA: Esta seria a saida se fosse uma PILHA (LIFO), onde o ultimo a entrar e o primeiro a sair. A fila usa FIFO, entao o primeiro a entrar (5) e o primeiro a sair.",
+                    null,
+                    "ERRADA: O 20 foi inserido DEPOIS do primeiro dequeue, entao ele esta no fim da fila. Os elementos 5, 10 e 15 foram inseridos antes e saem primeiro. O 20 so sairia no quarto dequeue.",
+                    "ERRADA: O 20 foi o ultimo a entrar, entao sera o ultimo a sair. Na fila FIFO, a ordem de saida e a mesma da entrada. O 20 nao pode sair antes do 10 e 15."
+                ]
+            },
+            // FILA - Questao 6
+            {
+                topic: "Fila",
+                question: "Em um sistema operacional, o escalonamento de processos utiliza uma fila. Quando um novo processo e criado, ele e colocado no final da fila, e o processador atende o processo que esta no inicio. Esse modelo representa qual algoritmo de escalonamento?",
+                options: [
+                    "Shortest Job First (SJF)",
+                    "Round Robin com quantum fixo",
+                    "First Come, First Served (FCFS)",
+                    "Priority Scheduling"
+                ],
+                correct: 2,
+                explanation: "O algoritmo FCFS (First Come, First Served) ou FIFO utiliza exatamente o conceito de fila: o primeiro processo a chegar e o primeiro a ser atendido. E o algoritmo de escalonamento mais simples, onde os processos sao executados na ordem de chegada. A estrutura de fila e perfeita para implementar esse comportamento.",
+                wrongExplanations: [
+                    "ERRADA: No SJF (Shortest Job First), o processo com menor tempo de execucao e atendido primeiro, independente da ordem de chegada. Isso requer conhecer o tempo de cada processo e NAO usa uma fila simples.",
+                    "ERRADA: O Round Robin usa uma fila, MAS cada processo recebe um tempo fixo (quantum) e depois volta para o fim da fila. O enunciado nao menciona preempcao nem quantum, apenas atendimento completo por ordem de chegada.",
+                    null,
+                    "ERRADA: No Priority Scheduling, processos com maior prioridade sao atendidos primeiro, independente da ordem de chegada. Isso requer uma fila de prioridade, nao uma fila simples."
+                ]
+            },
+            // ARVORE - Questao 7
+            {
+                topic: "Arvore",
+                question: "Em uma arvore binaria de busca (BST), qual e a propriedade fundamental que deve ser mantida para todos os nos?",
+                code: `typedef struct No {
+    int valor;
+    struct No *esquerda;
+    struct No *direita;
+} No;`,
+                options: [
+                    "Todos os nos da esquerda sao maiores e os da direita sao menores",
+                    "Todos os nos da esquerda sao menores e os da direita sao maiores",
+                    "A arvore deve estar sempre balanceada",
+                    "Cada no deve ter exatamente dois filhos"
+                ],
+                correct: 1,
+                explanation: "Na arvore binaria de busca (BST), para qualquer no, todos os valores na subarvore esquerda sao MENORES que o valor do no, e todos os valores na subarvore direita sao MAIORES. Essa propriedade permite buscas eficientes em O(log n) no caso medio, pois a cada comparacao eliminamos metade dos elementos.",
+                wrongExplanations: [
+                    "ERRADA: Esta e exatamente a propriedade INVERTIDA. Se esquerda fosse maior e direita menor, a busca binaria nao funcionaria corretamente. A convencao padrao e: esquerda MENOR, direita MAIOR.",
+                    null,
+                    "ERRADA: Uma BST NAO precisa estar balanceada. Ela pode ficar desbalanceada (ate degenerada em lista) e ainda ser uma BST valida. Arvores AVL e Red-Black sao BSTs que ADICIONAM a restricao de balanceamento.",
+                    "ERRADA: Uma arvore BINARIA pode ter 0, 1 ou 2 filhos por no. Ter exatamente dois filhos definiria uma arvore binaria ESTRITAMENTE COMPLETA, que e um caso especial, nao a regra."
+                ]
+            },
+            // ARVORE - Questao 8
+            {
+                topic: "Arvore",
+                question: "Considere a seguinte arvore binaria de busca. Qual sera a sequencia de nos visitados em um percurso EM-ORDEM (in-order)?",
+                code: `        50
+       /  \\
+      30   70
+     / \\   / \\
+    20 40 60 80`,
+                options: [
+                    "50, 30, 20, 40, 70, 60, 80",
+                    "20, 30, 40, 50, 60, 70, 80",
+                    "20, 40, 30, 60, 80, 70, 50",
+                    "50, 30, 70, 20, 40, 60, 80"
+                ],
+                correct: 1,
+                explanation: "O percurso em-ordem (in-order) visita: subarvore esquerda, raiz, subarvore direita. Em uma BST, isso resulta nos elementos em ordem crescente. Percurso: visita 20 (folha esquerda), 30 (pai), 40 (folha direita), 50 (raiz), 60 (folha esquerda), 70 (pai), 80 (folha direita). Resultado: 20, 30, 40, 50, 60, 70, 80.",
+                wrongExplanations: [
+                    "ERRADA: Este e o percurso PRE-ORDEM (pre-order), que visita: raiz, subarvore esquerda, subarvore direita. Comeca pela raiz 50, depois desce pela esquerda.",
+                    null,
+                    "ERRADA: Este e o percurso POS-ORDEM (post-order), que visita: subarvore esquerda, subarvore direita, raiz. Termina pela raiz 50, visitando filhos antes dos pais.",
+                    "ERRADA: Este e o percurso em LARGURA (BFS - level order), que visita nivel por nivel da arvore, da esquerda para direita. Nao e um percurso em profundidade."
+                ]
+            },
+            // ARVORE - Questao 9
+            {
+                topic: "Arvore",
+                question: "Qual e a complexidade de tempo para buscar um elemento em uma arvore binaria de busca balanceada com n elementos?",
+                options: [
+                    "O(1) - tempo constante",
+                    "O(n) - tempo linear",
+                    "O(log n) - tempo logaritmico",
+                    "O(n^2) - tempo quadratico"
+                ],
+                correct: 2,
+                explanation: "Em uma BST balanceada, a altura da arvore e log n. A cada nivel, eliminamos metade das possibilidades (vamos para esquerda ou direita). Portanto, no pior caso, visitamos log n nos. E importante notar que em uma BST desbalanceada (degenerada em lista), a complexidade pode chegar a O(n).",
+                wrongExplanations: [
+                    "ERRADA: O(1) significaria encontrar o elemento instantaneamente, sem percorrer a arvore. Isso so e possivel com hash tables. Na BST, precisamos comparar e descer pela arvore.",
+                    "ERRADA: O(n) e a complexidade de uma BST DESBALANCEADA (degenerada em lista) ou de uma busca linear. Em uma BST BALANCEADA, aproveitamos a estrutura para eliminar metade dos elementos a cada passo.",
+                    null,
+                    "ERRADA: O(n^2) seria uma complexidade muito alta, tipica de algoritmos com dois lacos aninhados percorrendo todos os elementos. Nao se aplica a busca em arvores."
+                ]
+            },
+            // ORDENACAO - Questao 10
+            {
+                topic: "Ordenacao",
+                question: "Analise o codigo do algoritmo de ordenacao abaixo e identifique qual algoritmo esta sendo implementado:",
+                code: `void ordenar(int vet[], int n) {
+    int i, j, menor, temp;
+    for (i = 0; i < n - 1; i++) {
+        menor = i;
+        for (j = i + 1; j < n; j++) {
+            if (vet[j] < vet[menor]) {
+                menor = j;
+            }
+        }
+        temp = vet[i];
+        vet[i] = vet[menor];
+        vet[menor] = temp;
+    }
+}`,
+                options: [
+                    "Bubble Sort",
+                    "Insertion Sort",
+                    "Selection Sort",
+                    "Quick Sort"
+                ],
+                correct: 2,
+                explanation: "Este e o Selection Sort (ordenacao por selecao). O algoritmo encontra o menor elemento do subvetor nao ordenado e o coloca na posicao correta. A cada iteracao do laco externo, selecionamos o menor elemento restante. Caracteristicas: sempre faz n(n-1)/2 comparacoes, complexidade O(n^2), mas faz no maximo n trocas.",
+                wrongExplanations: [
+                    "ERRADA: O Bubble Sort compara elementos ADJACENTES e troca se estiverem fora de ordem, fazendo o maior 'borbulhar' para o final. Este codigo compara com uma variavel 'menor' e troca apenas uma vez por iteracao externa.",
+                    "ERRADA: O Insertion Sort pega cada elemento e o insere na posicao correta no subvetor ja ordenado, deslocando elementos maiores. Este codigo nao desloca elementos, apenas encontra o menor e troca.",
+                    null,
+                    "ERRADA: O Quick Sort usa divisao e conquista com um pivo, particionando o vetor em elementos menores e maiores que o pivo. Este codigo nao usa recursao nem particionamento."
+                ]
+            },
+            // ORDENACAO - Questao 11
+            {
+                topic: "Ordenacao",
+                question: "Considerando os algoritmos de ordenacao Bubble Sort, Selection Sort e Insertion Sort, qual afirmacao e CORRETA sobre suas complexidades?",
+                options: [
+                    "Bubble Sort tem complexidade O(n) no melhor caso",
+                    "Selection Sort sempre tem complexidade O(n^2), independente da entrada",
+                    "Insertion Sort tem complexidade O(n^2) no melhor caso",
+                    "Todos tem complexidade O(n log n) no caso medio"
+                ],
+                correct: 1,
+                explanation: "Selection Sort SEMPRE tem complexidade O(n^2) porque sempre percorre todo o subvetor nao ordenado para encontrar o minimo, independente de como os dados estao organizados. Ja o Bubble Sort e Insertion Sort podem ter O(n) no melhor caso (vetor ja ordenado). Nenhum deles atinge O(n log n).",
+                wrongExplanations: [
+                    "ERRADA: O Bubble Sort PODE ter O(n) no melhor caso, MAS apenas com otimizacao (flag para detectar se houve troca). O Bubble Sort basico sem otimizacao tem O(n^2) mesmo no melhor caso. A afirmacao esta parcialmente correta mas e imprecisa.",
+                    null,
+                    "ERRADA: O Insertion Sort tem complexidade O(n) no MELHOR caso (vetor ja ordenado), pois apenas percorre o vetor uma vez verificando que cada elemento ja esta na posicao correta. O(n^2) e no PIOR caso.",
+                    "ERRADA: NENHUM destes algoritmos atinge O(n log n). Essa complexidade e de algoritmos mais eficientes como Merge Sort, Quick Sort (caso medio) e Heap Sort. Bubble, Selection e Insertion sao todos O(n^2) no caso medio."
+                ]
+            },
+            // ORDENACAO - Questao 12
+            {
+                topic: "Ordenacao",
+                question: "O algoritmo Quick Sort utiliza a estrategia de divisao e conquista. Qual e a complexidade de tempo no pior caso e quando ele ocorre?",
+                options: [
+                    "O(n log n) - quando o vetor esta aleatorio",
+                    "O(n^2) - quando o pivo sempre divide o vetor pela metade",
+                    "O(n^2) - quando o vetor ja esta ordenado e o pivo e o primeiro elemento",
+                    "O(n) - quando o vetor tem poucos elementos"
+                ],
+                correct: 2,
+                explanation: "O pior caso do Quick Sort e O(n^2) e ocorre quando o pivo escolhido e sempre o menor ou maior elemento, resultando em particoes desbalanceadas. Isso acontece quando o vetor ja esta ordenado (ou inversamente ordenado) e escolhemos o primeiro ou ultimo elemento como pivo. Nesse caso, temos n particoes de tamanho n-1, n-2, ..., 1.",
+                wrongExplanations: [
+                    "ERRADA: O(n log n) e a complexidade do MELHOR e MEDIO caso do Quick Sort, nao do pior caso. Ocorre quando o pivo divide o vetor em partes aproximadamente iguais.",
+                    "ERRADA: Quando o pivo divide o vetor pela METADE, temos o MELHOR caso O(n log n), nao o pior caso. Particoes balanceadas sao o cenario ideal para o Quick Sort.",
+                    null,
+                    "ERRADA: O(n) nunca e alcancado pelo Quick Sort. Mesmo com poucos elementos, a complexidade minima e O(n log n). O(n) seria de algoritmos de ordenacao especiais como Counting Sort (com restricoes)."
+                ]
+            },
+            // VETOR - Questao 13
+            {
+                topic: "Vetor",
+                question: "Analise o codigo abaixo que manipula um vetor. Qual sera a saida do programa?",
+                code: `#include <stdio.h>
+
+int main() {
+    int vet[5] = {2, 4, 6, 8, 10};
+    int *ptr = vet;
+
+    printf("%d ", *ptr);
+    ptr += 2;
+    printf("%d ", *ptr);
+    printf("%d", *(vet + 4));
+
+    return 0;
+}`,
+                options: [
+                    "2 4 10",
+                    "2 6 10",
+                    "0 2 8",
+                    "2 6 8"
+                ],
+                correct: 1,
+                explanation: "Inicialmente, ptr aponta para vet[0] = 2. *ptr imprime 2. Apos ptr += 2, ptr aponta para vet[2] = 6. *ptr imprime 6. A expressao *(vet + 4) e equivalente a vet[4] = 10. A aritmetica de ponteiros em C considera o tamanho do tipo, entao ptr += 2 avanca 2 posicoes de int.",
+                wrongExplanations: [
+                    "ERRADA: ptr += 2 avanca DUAS posicoes, nao uma. Entao ptr aponta para vet[2] = 6, nao para vet[1] = 4.",
+                    null,
+                    "ERRADA: ptr comeca apontando para vet[0] = 2, nao para uma posicao antes do vetor. Alem disso, *(vet + 4) = vet[4] = 10, nao 8.",
+                    "ERRADA: *(vet + 4) e equivalente a vet[4] = 10, nao vet[3] = 8. Na aritmetica de ponteiros, vet + 4 avanca 4 posicoes a partir do inicio."
+                ]
+            },
+            // VETOR - Questao 14
+            {
+                topic: "Vetor",
+                question: "Em C, qual e a diferenca fundamental entre passar um vetor para uma funcao e passar uma variavel simples?",
+                code: `void modificaVetor(int vet[], int tam) {
+    vet[0] = 100;
+}
+
+void modificaValor(int x) {
+    x = 100;
+}
+
+int main() {
+    int arr[3] = {1, 2, 3};
+    int num = 1;
+
+    modificaVetor(arr, 3);
+    modificaValor(num);
+    // Quais sao os valores de arr[0] e num?
+}`,
+                options: [
+                    "arr[0] = 1 e num = 100, pois vetores sao copiados",
+                    "arr[0] = 100 e num = 100, ambos sao passados por referencia",
+                    "arr[0] = 100 e num = 1, vetor passa endereco e variavel passa copia",
+                    "arr[0] = 1 e num = 1, ambos sao passados por valor"
+                ],
+                correct: 2,
+                explanation: "Em C, vetores sao passados por referencia (na verdade, o nome do vetor e um ponteiro para o primeiro elemento), entao modificacoes afetam o original: arr[0] = 100. Variaveis simples sao passadas por valor (copia), entao a modificacao em x nao afeta num: num = 1. Essa e uma distincao crucial em C.",
+                wrongExplanations: [
+                    "ERRADA: Vetores NAO sao copiados quando passados para funcoes. O que e passado e o ENDERECO do primeiro elemento. Por isso modificacoes afetam o original.",
+                    "ERRADA: Variaveis simples em C sao passadas por VALOR (copia), nao por referencia. A funcao recebe uma copia de num, e modificar a copia nao afeta o original.",
+                    null,
+                    "ERRADA: Vetores NAO sao passados por valor. Se fossem, arr[0] permaneceria 1. Como sao passados por referencia (endereco), a modificacao dentro da funcao afeta o original."
+                ]
+            },
+            // VETOR - Questao 15
+            {
+                topic: "Vetor",
+                question: "Qual sera a saida do programa que busca o maior elemento de um vetor?",
+                code: `#include <stdio.h>
+
+int main() {
+    int vet[] = {23, 45, 12, 67, 34, 89, 21};
+    int n = 7;
+    int maior = vet[0];
+    int pos = 0;
+
+    for (int i = 1; i < n; i++) {
+        if (vet[i] > maior) {
+            maior = vet[i];
+            pos = i;
+        }
+    }
+
+    printf("Maior: %d na posicao %d", maior, pos);
+    return 0;
+}`,
+                options: [
+                    "Maior: 89 na posicao 5",
+                    "Maior: 89 na posicao 6",
+                    "Maior: 67 na posicao 3",
+                    "Maior: 23 na posicao 0"
+                ],
+                correct: 0,
+                explanation: "O algoritmo percorre o vetor comparando cada elemento com o maior atual. O vetor e {23, 45, 12, 67, 34, 89, 21}. O maior valor e 89, que esta no indice 5 (lembrando que indices comecam em 0). O algoritmo corretamente identifica e imprime 'Maior: 89 na posicao 5'.",
+                wrongExplanations: [
+                    null,
+                    "ERRADA: Em C, indices de vetores comecam em 0, nao em 1. O elemento 89 esta na posicao 5 (contando: 0=23, 1=45, 2=12, 3=67, 4=34, 5=89, 6=21).",
+                    "ERRADA: O algoritmo encontra o MAIOR elemento, nao para no primeiro elemento grande. 67 nao e o maior; 89 e maior que 67.",
+                    "ERRADA: O valor inicial (23 na posicao 0) so seria a resposta se nenhum elemento fosse maior. Como 89 > 23, as variaveis maior e pos sao atualizadas."
+                ]
+            },
+            // MATRIZ - Questao 16
+            {
+                topic: "Matriz",
+                question: "Analise o codigo que percorre uma matriz. Qual sera a soma calculada?",
+                code: `#include <stdio.h>
+
+int main() {
+    int mat[3][3] = {
+        {1, 2, 3},
+        {4, 5, 6},
+        {7, 8, 9}
+    };
+    int soma = 0;
+
+    for (int i = 0; i < 3; i++) {
+        soma += mat[i][i];
+    }
+
+    printf("Soma: %d", soma);
+    return 0;
+}`,
+                options: [
+                    "Soma: 45 (soma de todos os elementos)",
+                    "Soma: 15 (soma da diagonal principal)",
+                    "Soma: 15 (soma da diagonal secundaria)",
+                    "Soma: 12 (soma da primeira linha)"
+                ],
+                correct: 1,
+                explanation: "O codigo soma os elementos da diagonal principal da matriz (onde linha == coluna). Os elementos sao: mat[0][0]=1, mat[1][1]=5, mat[2][2]=9. A soma e 1+5+9=15. A diagonal principal vai do canto superior esquerdo ao canto inferior direito.",
+                wrongExplanations: [
+                    "ERRADA: Para somar todos os elementos, precisariamos de dois lacos aninhados percorrendo todas as linhas e colunas. O codigo usa apenas um laco e acessa mat[i][i].",
+                    null,
+                    "ERRADA: A diagonal SECUNDARIA usa indices [0][2], [1][1], [2][0], ou seja, mat[i][n-1-i]. O codigo usa mat[i][i], que e a diagonal PRINCIPAL. Embora o resultado seja 15 nos dois casos para esta matriz, a explicacao esta errada.",
+                    "ERRADA: A primeira linha seria mat[0][0] + mat[0][1] + mat[0][2] = 1+2+3 = 6, nao 12. Alem disso, o codigo nao soma uma linha, mas elementos onde i==j."
+                ]
+            },
+            // MATRIZ - Questao 17
+            {
+                topic: "Matriz",
+                question: "Em uma matriz m x n armazenada em um vetor linear (row-major order), qual e a formula para calcular o indice do elemento mat[i][j]?",
+                code: `// Matriz 3x4 armazenada linearmente
+int vetor[12];
+// Como acessar o equivalente a mat[i][j]?`,
+                options: [
+                    "indice = i + j * m",
+                    "indice = i * n + j",
+                    "indice = j * m + i",
+                    "indice = (i + j) * n"
+                ],
+                correct: 1,
+                explanation: "Em row-major order (padrao em C), os elementos sao armazenados linha por linha. Para uma matriz m x n, o elemento mat[i][j] esta na posicao: indice = i * n + j, onde n e o numero de colunas. Isso porque pulamos i linhas completas (cada uma com n elementos) e entao avancamos j posicoes na linha atual.",
+                wrongExplanations: [
+                    "ERRADA: Esta formula (i + j * m) seria para COLUMN-major order (usado em Fortran), onde os elementos sao armazenados coluna por coluna, nao linha por linha.",
+                    null,
+                    "ERRADA: Esta formula (j * m + i) tambem e para column-major order. Em row-major, multiplicamos a LINHA pelo numero de COLUNAS, nao a coluna pelo numero de linhas.",
+                    "ERRADA: Esta formula ((i + j) * n) esta completamente incorreta. Somaria linha e coluna antes de multiplicar, o que nao faz sentido para indexacao linear de matriz."
+                ]
+            },
+            // LACO - Questao 18
+            {
+                topic: "Laco de Repeticao",
+                question: "Analise o codigo com lacos aninhados. Quantas vezes a mensagem sera impressa?",
+                code: `#include <stdio.h>
+
+int main() {
+    int cont = 0;
+
+    for (int i = 1; i <= 4; i++) {
+        for (int j = 1; j <= i; j++) {
+            cont++;
+        }
+    }
+
+    printf("Total: %d", cont);
+    return 0;
+}`,
+                options: [
+                    "Total: 16",
+                    "Total: 10",
+                    "Total: 8",
+                    "Total: 4"
+                ],
+                correct: 1,
+                explanation: "O laco interno executa um numero variavel de vezes baseado em i. Quando i=1: j vai de 1 a 1 (1 vez). Quando i=2: j vai de 1 a 2 (2 vezes). Quando i=3: j vai de 1 a 3 (3 vezes). Quando i=4: j vai de 1 a 4 (4 vezes). Total: 1+2+3+4 = 10. Esse padrao e a soma dos primeiros n numeros naturais: n(n+1)/2 = 4*5/2 = 10.",
+                wrongExplanations: [
+                    "ERRADA: 16 seria o resultado se o laco interno sempre executasse 4 vezes (4*4=16). Mas j vai apenas ate i, nao ate 4. O numero de iteracoes internas varia.",
+                    null,
+                    "ERRADA: 8 nao corresponde a nenhum calculo correto para este codigo. Nao e 4+4, nem 2*4, nem qualquer combinacao logica dos lacos.",
+                    "ERRADA: 4 seria apenas o numero de iteracoes do laco EXTERNO. Ignora completamente as iteracoes do laco interno, que executa multiplas vezes para cada i."
+                ]
+            },
+            // LACO - Questao 19
+            {
+                topic: "Laco de Repeticao",
+                question: "Qual sera a saida do seguinte programa que utiliza o comando break?",
+                code: `#include <stdio.h>
+
+int main() {
+    int i, j;
+
+    for (i = 1; i <= 3; i++) {
+        for (j = 1; j <= 3; j++) {
+            if (j == 2) {
+                break;
+            }
+            printf("%d%d ", i, j);
+        }
+    }
+
+    return 0;
+}`,
+                options: [
+                    "11 12 13 21 22 23 31 32 33",
+                    "11 21 31",
+                    "11 12 21 22 31 32",
+                    "11"
+                ],
+                correct: 1,
+                explanation: "O comando break interrompe apenas o laco mais interno. Para cada valor de i (1, 2, 3), o laco interno comeca com j=1, imprime i e j concatenados, depois j=2 e o break e executado, saindo do laco interno. O laco externo continua. Resultado: quando i=1 imprime '11', quando i=2 imprime '21', quando i=3 imprime '31'. Saida: '11 21 31'.",
+                wrongExplanations: [
+                    "ERRADA: Esta seria a saida se NAO houvesse break. O break interrompe o laco interno quando j=2, impedindo a impressao de elementos com j>=2.",
+                    null,
+                    "ERRADA: O break e executado ANTES do printf quando j==2, entao elementos com j=2 NAO sao impressos. O break vem antes de qualquer possibilidade de imprimir j=2.",
+                    "ERRADA: O break interrompe apenas o laco INTERNO, nao o externo. O laco externo continua normalmente para i=2 e i=3, imprimindo '21' e '31'."
+                ]
+            },
+            // LACO - Questao 20
+            {
+                topic: "Laco de Repeticao",
+                question: "Considere o codigo que calcula o fatorial de um numero. Qual e o valor de fat apos a execucao?",
+                code: `#include <stdio.h>
+
+int main() {
+    int n = 5;
+    int fat = 1;
+    int i = n;
+
+    while (i > 1) {
+        fat = fat * i;
+        i--;
+    }
+
+    printf("Fatorial: %d", fat);
+    return 0;
+}`,
+                options: [
+                    "Fatorial: 5",
+                    "Fatorial: 24",
+                    "Fatorial: 120",
+                    "Fatorial: 720"
+                ],
+                correct: 2,
+                explanation: "O codigo calcula 5! (fatorial de 5). O while executa enquanto i > 1. Iteracoes: fat=1*5=5 (i=5), fat=5*4=20 (i=4), fat=20*3=60 (i=3), fat=60*2=120 (i=2). Quando i=1, a condicao i>1 e falsa e o laco termina. 5! = 5*4*3*2*1 = 120.",
+                wrongExplanations: [
+                    "ERRADA: 5 seria o resultado apenas da primeira iteracao (1*5). O laco continua multiplicando por 4, 3, 2 ate i deixar de ser maior que 1.",
+                    "ERRADA: 24 e o fatorial de 4 (4! = 24), nao de 5. Ou seria o resultado se o laco parasse em i>2. Como para em i>1, multiplicamos ate 2.",
+                    null,
+                    "ERRADA: 720 e o fatorial de 6 (6! = 720), nao de 5. O codigo usa n=5, entao calcula 5! = 120."
+                ]
+            }
+        ];
+
+        let currentQuestion = 0;
+        let correctAnswers = 0;
+        let wrongAnswers = 0;
+        let selectedOption = -1;
+        let answered = false;
+        let answeredQuestions = [];
+
+        // Fotos para questões ímpares (1, 3, 5, 7, 9, 11, 13, 15, 17, 19)
+        const questionPhotos = {
+            0: 'foto1.jpeg',   // Questão 1
+            2: 'foto2.JPG',    // Questão 3
+            4: 'foto3.jpeg',   // Questão 5
+            6: 'foto4.jpeg',   // Questão 7
+            8: 'foto6.jpeg',   // Questão 9
+            10: 'foto7.jpeg',  // Questão 11
+            12: 'foto8.jpeg',  // Questão 13
+            14: 'foto9.jpeg',  // Questão 15
+            16: 'foto10.jpeg', // Questão 17
+            18: 'foto1.jpeg'   // Questão 19 (repete foto1)
+        };
+
+        function startQuiz() {
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('quizContainer').style.display = 'block';
+            answeredQuestions = new Array(questions.length).fill(null);
+            renderQuestions();
+            showQuestion(0);
+        }
+
+        function renderQuestions() {
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = '';
+
+            questions.forEach((q, index) => {
+                let wrongOptionsHTML = '';
+                q.options.forEach((opt, i) => {
+                    if (i !== q.correct && q.wrongExplanations[i]) {
+                        wrongOptionsHTML += `
+                            <div class="wrong-option-item">
+                                <strong>Alternativa ${String.fromCharCode(65 + i)}:</strong> ${opt}
+                                <p>${q.wrongExplanations[i]}</p>
+                            </div>
+                        `;
+                    }
+                });
+
+                const photoHTML = questionPhotos[index] ? `<img src="${questionPhotos[index]}" alt="Foto da questão" class="question-photo">` : '';
+
+                const questionHTML = `
+                    <div class="question-card" id="question-${index}">
+                        <div class="question-header">
+                            <span class="question-number">Questao ${index + 1}</span>
+                            <span class="question-topic">${q.topic}</span>
+                        </div>
+                        ${photoHTML}
+                        <div class="question-text">${q.question}</div>
+                        ${q.code ? `<div class="code-block"><pre>${q.code}</pre></div>` : ''}
+                        <div class="options" id="options-${index}">
+                            ${q.options.map((opt, i) => `
+                                <div class="option" id="option-${index}-${i}" onclick="selectOption(${index}, ${i})">
+                                    <span class="option-letter">${String.fromCharCode(65 + i)}</span>
+                                    <span class="option-text">${opt}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="selected-indicator" id="selected-indicator-${index}">
+                            Alternativa selecionada: <strong id="selected-letter-${index}">-</strong>
+                        </div>
+                        <div class="explanation" id="explanation-${index}">
+                            <h4>Resposta Correta - Alternativa ${String.fromCharCode(65 + q.correct)}:</h4>
+                            <p>${q.explanation}</p>
+                            <div class="wrong-options">
+                                <h5>Por que as outras alternativas estao erradas:</h5>
+                                ${wrongOptionsHTML}
+                            </div>
+                        </div>
+                        <div class="buttons-container" id="buttons-${index}">
+                            <button class="btn btn-back" id="btn-back-${index}" onclick="previousQuestion()">
+                                Voltar
+                            </button>
+                            <button class="btn btn-confirm" id="btn-confirm-${index}" onclick="confirmAnswer(${index})">
+                                Confirmar Resposta
+                            </button>
+                            <button class="btn btn-next" id="btn-next-${index}" onclick="nextQuestion()">
+                                ${index === questions.length - 1 ? 'Ver Resultado' : 'Proxima'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += questionHTML;
+            });
+        }
+
+        function showQuestion(index) {
+            document.querySelectorAll('.question-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            document.getElementById(`question-${index}`).classList.add('active');
+
+            // Reset selection for new question
+            selectedOption = -1;
+            answered = answeredQuestions[index] !== null;
+
+            // Update back button state
+            const backBtn = document.getElementById(`btn-back-${index}`);
+            backBtn.disabled = index === 0;
+
+            // If question was already answered, show the state
+            if (answered) {
+                const savedAnswer = answeredQuestions[index];
+                showAnsweredState(index, savedAnswer.selected, savedAnswer.correct);
+            }
+
+            updateProgress();
+        }
+
+        function selectOption(questionIndex, optionIndex) {
+            if (answered) return;
+
+            // Remove previous selection
+            const options = document.querySelectorAll(`#options-${questionIndex} .option`);
+            options.forEach(opt => opt.classList.remove('selected'));
+
+            // Add new selection
+            document.getElementById(`option-${questionIndex}-${optionIndex}`).classList.add('selected');
+            selectedOption = optionIndex;
+
+            // Show selected indicator
+            document.getElementById(`selected-indicator-${questionIndex}`).classList.add('show');
+            document.getElementById(`selected-letter-${questionIndex}`).textContent = String.fromCharCode(65 + optionIndex);
+
+            // Show confirm button
+            document.getElementById(`btn-confirm-${questionIndex}`).classList.add('show');
+        }
+
+        function confirmAnswer(questionIndex) {
+            if (selectedOption === -1 || answered) return;
+
+            answered = true;
+            const correctIndex = questions[questionIndex].correct;
+            const isCorrect = selectedOption === correctIndex;
+
+            // Save answer
+            answeredQuestions[questionIndex] = {
+                selected: selectedOption,
+                correct: correctIndex,
+                isCorrect: isCorrect
+            };
+
+            // Update scores
+            if (isCorrect) {
+                correctAnswers++;
+            } else {
+                wrongAnswers++;
+            }
+
+            document.getElementById('correctCount').textContent = correctAnswers;
+            document.getElementById('wrongCount').textContent = wrongAnswers;
+
+            showAnsweredState(questionIndex, selectedOption, correctIndex);
+        }
+
+        function showAnsweredState(questionIndex, selectedIdx, correctIdx) {
+            const options = document.querySelectorAll(`#options-${questionIndex} .option`);
+
+            options.forEach((opt, i) => {
+                opt.classList.add('disabled');
+                opt.classList.remove('selected');
+                if (i === correctIdx) {
+                    opt.classList.add('correct');
+                } else if (i === selectedIdx && selectedIdx !== correctIdx) {
+                    opt.classList.add('wrong');
+                }
+            });
+
+            // Hide confirm, show next
+            document.getElementById(`btn-confirm-${questionIndex}`).classList.remove('show');
+            document.getElementById(`btn-next-${questionIndex}`).classList.add('show');
+            document.getElementById(`selected-indicator-${questionIndex}`).classList.remove('show');
+            document.getElementById(`explanation-${questionIndex}`).classList.add('show');
+        }
+
+        function previousQuestion() {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                showQuestion(currentQuestion);
+            }
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            if (currentQuestion >= questions.length) {
+                showResults();
+            } else {
+                showQuestion(currentQuestion);
+            }
+        }
+
+        function updateProgress() {
+            const progress = ((currentQuestion + 1) / questions.length) * 100;
+            document.getElementById('progressFill').style.width = `${progress}%`;
+            document.getElementById('progressText').textContent = `Questao ${currentQuestion + 1} de ${questions.length}`;
+        }
+
+        function showResults() {
+            document.getElementById('quizContainer').style.display = 'none';
+            document.getElementById('results').classList.add('active');
+
+            const percentage = Math.round((correctAnswers / questions.length) * 100);
+            document.getElementById('finalScore').textContent = `${percentage}%`;
+            document.getElementById('finalCorrect').textContent = correctAnswers;
+
+            let message = '';
+            if (percentage >= 90) {
+                message = 'Excelente! Voce domina os conceitos!';
+            } else if (percentage >= 70) {
+                message = 'Muito bom! Continue estudando!';
+            } else if (percentage >= 50) {
+                message = 'Bom esforco! Revise os topicos com mais atencao.';
+            } else {
+                message = 'Precisa estudar mais. Nao desista!';
+            }
+            document.getElementById('finalMessage').textContent = message;
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            correctAnswers = 0;
+            wrongAnswers = 0;
+            selectedOption = -1;
+            answered = false;
+            answeredQuestions = [];
+
+            document.getElementById('correctCount').textContent = '0';
+            document.getElementById('wrongCount').textContent = '0';
+            document.getElementById('results').classList.remove('active');
+            document.getElementById('quizContainer').style.display = 'block';
+
+            renderQuestions();
+            showQuestion(0);
+        }
+    </script>
+</body>
+</html>
